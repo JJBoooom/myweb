@@ -3,20 +3,17 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"html/template"
-	"io"
 	"net/http"
-	"os"
 )
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint("exercise")
+	fmt.Fprint(w, "exercise")
 }
 
 func DirShowHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("show")
 	fmt.Println(r.URL.Path)
-	//浏览器可能缓存了/proc获取的数据,在缓存期间,不向浏览器请求新数据
+	//浏览器可能缓存了/proc获取的数据,减少对服务器的访问
 	//导致页面显示的数据和实际的数据不同步，因此添加响应头部
 	//告知浏览器不要缓存获取的数据
 	w.Header().Set("Cache-Control", "no-store, no-cache")
@@ -41,6 +38,7 @@ func main() {
 	r := mux.NewRouter()
 	//无效url的控制器函数
 	r.NotFoundHandler = http.HandlerFunc(notfound)
+	//指定url="/"时,HTTP请求为"GET"时的动作
 	r.HandleFunc("/", HomeHandler).Methods("GET")
 	r.HandleFunc("/proc/", DirShowHandler).Methods("GET")
 	//注意/proc同时存在目录和文件的情况，两者的url不同

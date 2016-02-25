@@ -48,6 +48,14 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	io.Copy(f, file)
 }
 
+func DirShowHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("show")
+	fmt.Println(r.URL.Path)
+	w.Header().Set("Cache-Control", "no-store, no-cache")
+	http.ServeFile(w, r, "/proc")
+	//http.ServeFile(w, r, "./welcome.html")
+}
+
 func DownloadHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	//获取url传递的参数
@@ -63,24 +71,33 @@ func DownloadHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filepath)
 
 }
-
-type NotFoundHandler struct {
+func TestHandler(w http.ResponseWriter, r *http.Request) {
+	//w.Write([]byte("不见鸟~~"))
+	//http.ServeFile(w, r, "./welcome.html")
+	vars := mux.Vars(r)
+	content := vars["filename"]
+	stringa := "welcomxxxxx " + content
+	fmt.Fprint(w, stringa)
 }
 
-func (NotFoundHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("不见鸟~~"))
+func notfound(w http.ResponseWriter, r *http.Request) {
+	//w.Write([]byte("不见鸟~~"))
+	http.ServeFile(w, r, "./error404.html")
 }
 
 func main() {
 	//新增一个web url路由
 	r := mux.NewRouter()
-	var notfound NotFoundHandler
-	r.NotFoundHandler = notfound
+	//无效url的控制器函数
+	r.NotFoundHandler = http.HandlerFunc(notfound)
 	r.HandleFunc("/", HomeHandler).Methods("GET")
 	r.HandleFunc("/", UploadHandler).Methods("POST")
+	r.HandleFunc("/proc/", DirShowHandler).Methods("GET")
+	r.HandleFunc("/proc/{filename}", TestHandler).Methods("GET")
+	r.HandleFunc("/proc/{filename}/", TestHandler).Methods("GET")
 	//这里将/后面的内容当做filename参数传递给DownloadHandler
 	//多个参数怎么传递?
-	r.HandleFunc("/{filename}", DownloadHandler).Methods("GET")
+	//	r.HandleFunc("/{filename}", DownloadHandler).Methods("GET")
 	//使用自己写的路由
 	err := http.ListenAndServe(":9090", r)
 	if err != nil {
